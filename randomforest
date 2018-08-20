@@ -1,0 +1,95 @@
+import pandas as pd
+import numpy as np
+
+from sklearn.ensemble import RandomForestRegressor
+from pprint import pprint
+import matplotlib.pyplot as plt
+
+from sklearn import metrics
+from sklearn.metrics import mean_squared_error, r2_score
+
+
+file=pd.read_csv("oilgasdata.csv")
+file=file.iloc[::-1]
+
+x= file.drop(columns=["Date"])
+y= file["Vol"]
+
+#print(y.describe())
+
+#print(x)
+
+y=x["Vol"]
+
+y=np.log10(y)
+
+x=x.drop(columns=["Open", "High", "Low", "Vol"])#remove based on multicolinearity
+
+print()
+print(x.head())
+print()
+
+#print("\nSTOCKS DESCRIPTIVE STATS\n", x.describe())
+
+
+partition= - int(0.2* len(x))
+
+train_x= x[:partition]
+test_x= x[partition:]
+
+train_labels= y[:partition]
+test_labels= y[partition:]
+
+# The baseline prediction is the mean
+baseline_preds = 569.96
+
+# Baseline errors, and display average baseline error
+baseline_errors = abs(baseline_preds - test_labels)
+print('\nAverage baseline error: ', round(np.mean(baseline_errors), 2))
+
+rf = RandomForestRegressor(n_estimators = 1000)
+
+#print(rf.get_params())
+
+# Train the model on training data
+rf.fit(train_x, train_labels)
+
+# Use the forest's predict method on the test data
+predictions = rf.predict(test_x)
+
+
+print("\nPerformance of Model:")
+# The mean squared error
+print("Mean squared error: %.2f"
+      % mean_squared_error(test_labels, predictions))
+print('Root Mean Squared Error: %.2f'% np.sqrt(metrics.mean_squared_error(test_labels, predictions)))  
+# Explained variance score: 1 is perfect prediction
+print('Mean Absolute Error: %.2f' % metrics.mean_absolute_error(test_labels, predictions)) 
+
+# Explained variance score: 1 is perfect prediction
+print('r^2 value: %.2f' % r2_score(test_labels, predictions))
+"""
+errors = abs(predictions - test_labels)
+print('Mean Absolute Error:', round(np.mean(errors), 2), 'degrees.')
+mape = 100 * (errors / test_labels)
+accuracy = 100 - np.mean(mape)
+print('Accuracy:', round(accuracy, 2), '%.')
+"""
+
+"""
+Making a graphic of actual v predicted
+"""
+temp=file[partition:]
+temp2=temp["Date"].values
+
+
+# Plot the actual values
+plt.plot(temp['Date'], test_labels, 'ko',label="Actual")
+# Plot the predicted values
+plt.plot(temp['Date'], predictions, 'ro',label="Predicted")
+plt.xticks([0,30,60,90,120],[temp2[0],temp2[30],temp2[60],temp2[90],temp2[120]],rotation = '45'); 
+
+plt.legend()
+
+# Graph labels
+plt.ylabel('Log(Volume) in thousands')
