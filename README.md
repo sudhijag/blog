@@ -1,1 +1,1 @@
-**#Linear Regression blog post**
+**Linear Regression blog post**
